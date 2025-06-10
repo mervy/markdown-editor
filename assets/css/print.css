@@ -1,0 +1,19 @@
+.print-mode {
+    background-color: white !important;
+    color: black !important;
+}
+
+.print-mode .editor-col, 
+.print-mode .toolbar, 
+.print-mode .action-buttons,
+.print-mode .app-header {
+    display: none !important;
+}
+
+.print-mode .preview-col {
+    width: 100% !important;
+}
+
+.print-mode .preview-container {
+    padding: 40px !important;
+}

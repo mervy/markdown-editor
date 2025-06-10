@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Markdown Avançado</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Prism.js CSS base (tema claro padrão) -->
+    <link id="prism-theme" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS personalizado -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    
+    <!-- CSS para impressão -->
+    <link rel="stylesheet" href="assets/css/print.css" media="print">
+</head>
+<body>
+    <div class="app-container">
+        <div class="app-header">
+            <h1 class="app-title">Editor Markdown Avançado</h1>
+            <p class="app-subtitle">Escreva em Markdown e veja o preview em tempo real com realce de sintaxe</p>
+        </div>
+        
+        <div class="editor-container">
+            <!-- Editor Markdown -->
+            <div class="editor-col col-lg-6">
+                <div class="toolbar">
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="bold-btn" title="Negrito">
+                            <i class="fas fa-bold"></i>
+                        </button>
+                        <button class="toolbar-btn" id="italic-btn" title="Itálico">
+                            <i class="fas fa-italic"></i>
+                        </button>
+                        <button class="toolbar-btn" id="list-btn" title="Lista">
+                            <i class="fas fa-list-ul"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="code-btn" title="Bloco de Código">
+                            <i class="fas fa-code"></i>
+                        </button>
+                        <button class="toolbar-btn" id="image-btn" title="Inserir Imagem">
+                            <i class="fas fa-image"></i>
+                        </button>
+                        <button class="toolbar-btn" id="link-btn" title="Inserir Link">
+                            <i class="fas fa-link"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <textarea id="markdown-editor" class="editor-textarea" autofocus spellcheck="false"></textarea>
+            </div>
+            
+            <!-- Preview HTML -->
+            <div class="preview-col col-lg-6">
+                <div class="preview-container" id="preview">
+                    <div class="preview-title">Visualização</div>
+                    <div id="preview-content"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <div class="d-flex align-items-center">
+                <span class="theme-label">Tema:</span>
+                <select id="theme-selector" class="form-select theme-selector">
+                    <option value="prism.min.css">Claro (Padrão)</option>
+                    <option value="prism-tomorrow.min.css">Escuro (Tomorrow)</option>
+                    <option value="prism-solarizedlight.min.css">Solarized Claro</option>
+                </select>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button id="save-btn" class="btn btn-primary">
+                    <i class="fas fa-download me-1"></i> Salvar HTML
+                </button>
+                <button id="print-btn" class="btn btn-outline-primary">
+                    <i class="fas fa-print me-1"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Marked.js para conversão Markdown para HTML -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    
+    <!-- Prism.js para realce de sintaxe -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    
+    <!-- Autoloader para detecção automática de linguagens -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    
+    <!-- Componentes JS do Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Script personalizado -->
+    <script type="module" src="assets/js/script.js"></script>
+</body>
+</html>
