@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Markdown com Preview</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Prism.js CSS - Tema padrão claro -->
+    <link id="prism-theme" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome para ícones -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* Estilos personalizados */
+        .editor-container {
+            height: calc(100vh - 200px);
+            min-height: 500px;
+        }
+        
+        #markdown-input {
+            height: 100%;
+            resize: none;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            padding: 15px;
+        }
+        
+        #preview {
+            height: 100%;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: white;
+        }
+        
+        .toolbar {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .btn-toolbar .btn {
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        
+        /* Estilos para impressão */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            #preview, #preview * {
+                visibility: visible;
+            }
+            
+            #preview {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: auto;
+                border: none;
+                background: white !important;
+                color: black !important;
+            }
+            
+            /* Força tema claro na impressão */
+            pre[class*="language-"] {
+                background: #f5f5f5 !important;
+                color: #333 !important;
+            }
+            
+            code[class*="language-"] {
+                color: #333 !important;
+            }
+        }
+        
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .editor-container {
+                height: auto;
+            }
+            
+            #markdown-input, #preview {
+                height: 400px;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-3">
+        <!-- Cabeçalho -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <h1 class="h3 mb-3">
+                    <i class="fas fa-edit text-primary"></i>
+                    Editor Markdown com Preview
+                </h1>
+                
+                <!-- Barra de ferramentas -->
+                <div class="toolbar">
+                    <div class="row">
+                        <!-- Botões de formatação -->
+                        <div class="col-md-8 mb-2">
+                            <div class="btn-toolbar" role="toolbar">
+                                <div class="btn-group me-2" role="group">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="insertMarkdown('**', '**')" title="Negrito">
+                                        <i class="fas fa-bold"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="insertMarkdown('*', '*')" title="Itálico">
+                                        <i class="fas fa-italic"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="insertList()" title="Lista">
+                                        <i class="fas fa-list-ul"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="btn-group me-2" role="group">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="insertCodeBlock()" title="Bloco de código">
+                                        <i class="fas fa-code"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="insertImage()" title="Inserir imagem">
+                                        <i class="fas fa-image"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="insertLink()" title="Inserir link">
+                                        <i class="fas fa-link"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-success btn-sm" onclick="saveAsHTML()" title="Salvar como HTML">
+                                        <i class="fas fa-download"></i> Salvar HTML
+                                    </button>
+                                    <button type="button" class="btn btn-info btn-sm" onclick="printPreview()" title="Imprimir">
+                                        <i class="fas fa-print"></i> Imprimir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Seletor de tema -->
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <label for="theme-select" class="form-label me-2 mb-0">Tema:</label>
+                                <select id="theme-select" class="form-select form-select-sm" onchange="changeTheme()">
+                                    <option value="prism.min.css">Claro</option>
+                                    <option value="prism-tomorrow.min.css">Escuro</option>
+                                    <option value="prism-solarizedlight.min.css">Solarizado Claro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Editor e Preview -->
+        <div class="row editor-container">
+            <!-- Área de entrada Markdown -->
+            <div class="col-md-6">
+                <div class="h-100">
+                    <label for="markdown-input" class="form-label fw-bold">
+                        <i class="fas fa-keyboard"></i> Markdown
+                    </label>
+                    <textarea id="markdown-input" class="form-control" placeholder="Digite seu Markdown aqui..."></textarea>
+                </div>
+            </div>
+            
+            <!-- Área de preview -->
+            <div class="col-md-6">
+                <div class="h-100">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-eye"></i> Preview
+                    </label>
+                    <div id="preview"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Marked.js para conversão Markdown -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/5.1.1/marked.min.js"></script>
+    
+    <!-- Prism.js Core -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    
+    <!-- Prism.js Autoloader Plugin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    
+    <!-- Prism.js Linguagens -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-tsx.min.js"></script>
+
+    <script>
+        // Configuração do Marked.js com integração ao Prism.js
+        marked.setOptions({
+            highlight: function(code, lang) {
+                // Verifica se a linguagem é suportada pelo Prism
+                if (lang && Prism.languages[lang]) {
+                    return Prism.highlight(code, Prism.languages[lang], lang);
+                }
+                // Fallback para linguagem genérica
+                return Prism.highlight(code, Prism.languages.markup, 'markup');
+            },
+            breaks: true,
+            gfm: true
+        });
+
+        // Referências DOM
+        const markdownInput = document.getElementById('markdown-input');
+        const preview = document.getElementById('preview');
+        const themeSelect = document.getElementById('theme-select');
+
+        // Conteúdo Markdown de exemplo
+        const exampleMarkdown = `# Editor Markdown com Preview
+
+Este é um **editor Markdown** com *preview em tempo real* e destaque de código!
+
+## Funcionalidades
+
+- **Negrito** e *itálico*
+- Lista de itens
+- Blocos de código com destaque de sintaxe
+- Inserção de imagens e links
+- Múltiplos temas visuais
+
+## Exemplo de Código JavaScript
+
+\`\`\`javascript
+function saudacao(nome) {
+    console.log(\`Olá, \${nome}!\`);
+    return \`Bem-vindo ao editor Markdown!\`;
+}
+
+const resultado = saudacao('Desenvolvedor');
+document.body.innerHTML = resultado;
+\`\`\`
+
+## Exemplo de Código PHP
+
+\`\`\`php
+<?php
+class Usuario {
+    private $nome;
+    
+    public function __construct($nome) {
+        $this->nome = $nome;
+    }
+    
+    public function saudar() {
+        return "Olá, " . $this->nome . "!";
+    }
+}
+
+$usuario = new Usuario("João");
+echo $usuario->saudar();
+?>
+\`\`\`
+
+## Exemplo de CSS
+
+\`\`\`css
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+    color: #333;
+    font-size: 2rem;
+    text-align: center;
+}
+\`\`\`
+
+## Imagem de Exemplo
+
+![Markdown Logo](https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Markdown-mark.svg/175px-Markdown-mark.svg.png)
+
+## Link de Exemplo
+
+Visite a [documentação do Markdown](https://www.markdownguide.org/) para aprender mais!
+
+---
+
+**Happy coding!** 🚀`;
+
+        // Inicialização
+        function init() {
+            markdownInput.value = exampleMarkdown;
+            updatePreview();
+            
+            // Event listener para atualização em tempo real
+            markdownInput.addEventListener('input', updatePreview);
+        }
+
+        // Função para atualizar o preview
+        function updatePreview() {
+            const markdownText = markdownInput.value;
+            const htmlContent = marked.parse(markdownText);
+            preview.innerHTML = htmlContent;
+            
+            // Re-aplica o destaque de sintaxe para novos elementos
+            Prism.highlightAllUnder(preview);
+        }
+
+        // Função para inserir markdown no cursor
+        function insertMarkdown(before, after = '') {
+            const textarea = markdownInput;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            
+            const replacement = before + selectedText + after;
+            
+            textarea.value = textarea.value.substring(0, start) + replacement + textarea.value.substring(end);
+            
+            // Posiciona o cursor
+            const newCursorPos = start + before.length + selectedText.length;
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+            textarea.focus();
+            
+            updatePreview();
+        }
+
+        // Função para inserir lista
+        function insertList() {
+            const textarea = markdownInput;
+            const start = textarea.selectionStart;
+            const lines = textarea.value.substring(0, start).split('\n');
+            const currentLine = lines[lines.length - 1];
+            
+            // Insere nova linha se não estiver no início de uma linha
+            const prefix = currentLine.length > 0 ? '\n- ' : '- ';
+            insertMarkdown(prefix, '');
+        }
+
+        // Função para inserir bloco de código
+        function insertCodeBlock() {
+            const languages = ['javascript', 'php', 'html', 'css', 'json', 'bash', 'jsx', 'tsx'];
+            const language = prompt('Escolha a linguagem:\n' + languages.join(', '), 'javascript');
+            
+            if (language) {
+                const codeBlock = `\n\`\`\`${language}\n// Seu código aqui\n\`\`\`\n`;
+                insertMarkdown(codeBlock, '');
+            }
+        }
+
+        // Função para inserir imagem
+        function insertImage() {
+            const url = prompt('URL da imagem:');
+            if (url) {
+                const alt = prompt('Texto alternativo:', 'Imagem');
+                insertMarkdown(`![${alt || 'Imagem'}](${url})`, '');
+            }
+        }
+
+        // Função para inserir link
+        function insertLink() {
+            const url = prompt('URL do link:');
+            if (url) {
+                const text = prompt('Texto do link:', 'Link');
+                insertMarkdown(`[${text || 'Link'}](${url})`, '');
+            }
+        }
+
+        // Função para trocar tema
+        function changeTheme() {
+            const selectedTheme = themeSelect.value;
+            const themeLink = document.getElementById('prism-theme');
+            themeLink.href = `https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/${selectedTheme}`;
+            
+            // Re-aplica o destaque após mudança de tema
+            setTimeout(() => {
+                Prism.highlightAllUnder(preview);
+            }, 100);
+        }
+
+        // Função para salvar como HTML
+        function saveAsHTML() {
+            const htmlContent = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documento Markdown</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
+    <style>
+        body { padding: 20px; }
+        .container { max-width: 800px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        ${preview.innerHTML}
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-tsx.min.js"></script>
+    <script>Prism.highlightAll();</script>
+</body>
+</html>`;
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'documento-markdown.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Função para imprimir preview
+        function printPreview() {
+            window.print();
+        }
+
+        // Inicializa o editor quando a página carrega
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
