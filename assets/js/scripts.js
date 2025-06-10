@@ -1,5 +1,7 @@
-// Conteúdo inicial de exemplo
-const initialContent = `# Bem-vindo ao Editor Markdown!
+// Aguardar o carregamento completo do DOM
+document.addEventListener('DOMContentLoaded', function() {
+    // Conteúdo inicial de exemplo
+    const initialContent = `# Bem-vindo ao Editor Markdown!
 
 Este é um exemplo de documento Markdown com várias funcionalidades.
 
@@ -63,8 +65,6 @@ E um link para o [site oficial do Markdown](https://daringfireball.net/projects/
 | C++       | Média        | Alta        |
 `;
 
-// Aguardar o carregamento do DOM
-document.addEventListener('DOMContentLoaded', () => {
     // Elementos DOM
     const editor = document.getElementById('markdown-editor');
     const previewContent = document.getElementById('preview-content');
