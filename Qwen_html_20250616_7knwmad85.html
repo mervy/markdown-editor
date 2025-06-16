@@ -11,10 +11,21 @@
     id="hljs-style" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/html.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js"></script>
+  <script>
+    //Gera o link cdn para suporte highlight das linguagens abaixo
+    let languages = ["php", "css", "html", "javascript", "python", "json"];
+
+    const cdnUrl =
+      "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/";
+
+    for (let lang of languages) {
+      let script = document.createElement("script");
+      script.src = `${cdnUrl}${lang}.min.js`;
+      script.async = true;
+      document.head.appendChild(script);
+      console.log(script.src);
+    }
+  </script>
 
   <style>
     html,
@@ -209,30 +220,31 @@ function teste() {
     }
 
     // Botões de formatação
-  let titleLevel = 0; // Nível global do título (0 = nenhum, 1 a 6 = h1 a h6)
+    let titleLevel = 0; // Nível global do título (0 = nenhum, 1 a 6 = h1 a h6)
 
-document.getElementById("btnTitle").addEventListener("click", () => {
-  const lines = input.value.split("\n");
-  const startPos = input.value.substring(0, input.selectionStart).split("\n").length - 1;
-  const endPos = input.value.substring(0, input.selectionEnd).split("\n").length - 1;
+    document.getElementById("btnTitle").addEventListener("click", () => {
+      const lines = input.value.split("\n");
+      const startPos =
+        input.value.substring(0, input.selectionStart).split("\n").length - 1;
+      const endPos =
+        input.value.substring(0, input.selectionEnd).split("\n").length - 1;
 
-  // Incrementa e reinicia de 0 a 6
-  titleLevel = (titleLevel + 1) % 7;
+      // Incrementa e reinicia de 0 a 6
+      titleLevel = (titleLevel + 1) % 7;
 
-  for (let i = startPos; i <= endPos; i++) {
-    // Remove qualquer # existente no início
-    lines[i] = lines[i].replace(/^#{1,6}\s*/, "");
-    // Adiciona o novo nível se for > 0
-    if (titleLevel > 0) {
-      lines[i] = "#".repeat(titleLevel) + " " + lines[i];
-    }
-  }
+      for (let i = startPos; i <= endPos; i++) {
+        // Remove qualquer # existente no início
+        lines[i] = lines[i].replace(/^#{1,6}\s*/, "");
+        // Adiciona o novo nível se for > 0
+        if (titleLevel > 0) {
+          lines[i] = "#".repeat(titleLevel) + " " + lines[i];
+        }
+      }
 
-  input.value = lines.join("\n");
-  input.focus();
-  updatePreview();
-});
-
+      input.value = lines.join("\n");
+      input.focus();
+      updatePreview();
+    });
 
     document
       .getElementById("btnBold")
