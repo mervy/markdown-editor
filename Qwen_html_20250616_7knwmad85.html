@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Markdown Editor</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css"
+    id="hljs-style" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/html.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js"></script>
+
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: sans-serif;
+      background-color: #f8f9fa;
+    }
+
+    header {
+      background-color: #0d6efd;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      background-color: #fff;
+      border-bottom: 1px solid #ccc;
+      flex-wrap: wrap;
+    }
+
+    .editor-container {
+      display: flex;
+      height: calc(100vh - 120px);
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    #markdownInput,
+    #previewOutput {
+      width: 50%;
+      min-width: 300px;
+      height: 100%;
+      resize: none;
+      border: none;
+      outline: none;
+      padding: 1rem;
+      box-sizing: border-box;
+      font-size: 14px;
+      overflow-y: auto;
+      transition: width 0.3s ease, flex 0.3s ease;
+    }
+
+    #markdownInput {
+      background-color: #f9f9f9;
+    }
+
+    #previewOutput {
+      background-color: #ffffff;
+      color: black;
+      border-left: 1px solid #ddd;
+    }
+
+    .editor-container.only-one-pane #markdownInput,
+    .editor-container.only-one-pane #previewOutput {
+      width: 100%;
+      flex: 1;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 1rem;
+      background-color: #fff;
+      border-top: 1px solid #dee2e6;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Markdown Editor</h1>
+  </header>
+
+  <!-- Barra de ferramentas -->
+  <div class="toolbar">
+    <button id="btnTitle" class="btn btn-sm btn-outline-secondary" title="Título (#)">
+      <i class="bi bi-type-h1"></i>
+    </button>
+    <button id="btnBold" class="btn btn-sm btn-outline-secondary" title="Negrito">
+      <i class="bi bi-type-bold"></i>
+    </button>
+    <button id="btnItalic" class="btn btn-sm btn-outline-secondary" title="Itálico">
+      <i class="bi bi-type-italic"></i>
+    </button>
+    <button id="btnUnderline" class="btn btn-sm btn-outline-secondary" title="Sublinhado">
+      <i class="bi bi-type-underline"></i>
+    </button>
+    <button id="btnStrikethrough" class="btn btn-sm btn-outline-secondary" title="Riscado">
+      <i class="bi bi-type-strikethrough"></i>
+    </button>
+    <button id="btnList" class="btn btn-sm btn-outline-secondary" title="Lista não ordenada">
+      <i class="bi bi-list-ul"></i>
+    </button>
+    <button id="btnCodeWithLang" class="btn btn-sm btn-outline-secondary" title="Código com linguagem">
+      <i class="bi bi-code-slash"></i> + Lng
+    </button>
+    <button id="btnCodeInline" class="btn btn-sm btn-outline-secondary" title="Código Inline">
+      <i class="bi bi-code"></i>
+    </button>
+    <button id="btnLink" class="btn btn-sm btn-outline-secondary" title="Inserir Link">
+      <i class="bi bi-link-45deg"></i>
+    </button>
+    <button id="btnImage" class="btn btn-sm btn-outline-secondary" title="Inserir Imagem">
+      <i class="bi bi-image"></i>
+    </button>
+
+    <div class="ms-auto">
+      <button id="toggleSplitBtn" class="btn btn-sm btn-outline-secondary" title="Dividir Tela">
+        <i class="bi bi-columns-gap"></i>
+      </button>
+      <button id="themeToggleBtn" class="btn btn-sm btn-outline-secondary" title="Alternar tema do código">
+        <i class="bi bi-moon-stars"></i>
+      </button>
+      <button id="btnPrint" class="btn btn-sm btn-outline-secondary" title="Imprimir">
+        <i class="bi bi-printer"></i>
+      </button>
+      <button id="btnSaveMd" class="btn btn-sm btn-outline-secondary" title="Salvar como Markdown">
+        <i class="bi bi-filetype-md"></i>
+      </button>
+      <button id="btnSaveHtml" class="btn btn-sm btn-outline-secondary" title="Salvar como HTML">
+        <i class="bi bi-filetype-html"></i>
+      </button>
+      <button id="btnMarkdownDocs" class="btn btn-sm btn-outline-secondary" title="Documentação Markdown">
+        <i class="bi bi-question-circle"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Editor -->
+  <div class="editor-container" id="editorContainer">
+    <textarea id="markdownInput">
+# Olá Mundo
+
+Este é um exemplo de **negrito** e *itálico*.
+
+```js
+function teste() {
+  console.log("Código");
+}
+```
+
+</textarea>
+    <div id="previewOutput" class="d-none"></div>
+  </div>
+
+  <!-- Rodapé -->
+  <footer class="footer">&copy; 2025 - Markdown Editor Simples</footer>
+
+  <!-- Scripts -->
+  <script>
+    const input = document.getElementById("markdownInput");
+    const output = document.getElementById("previewOutput");
+    const editorContainer = document.getElementById("editorContainer");
+
+    let isDarkTheme = false;
+
+    function updatePreview() {
+      marked.setOptions({
+        highlight: function (code, lang) {
+          if (lang && hljs.getLanguage(lang)) {
+            return `<pre><code class="language-${lang}">${hljs.highlight(code, { language: lang }).value
+              }</code></pre>`;
+          } else {
+            return `<pre><code class="language-html">${hljs.highlight(code, { language: "html" }).value
+              }</code></pre>`;
+          }
+        },
+        langPrefix: "hljs language-",
+      });
+
+      output.innerHTML = marked.parse(input.value);
+      output.querySelectorAll("pre code").forEach(hljs.highlightElement);
+    }
+
+    // Função auxiliar para inserir texto formatado
+    function insertAroundSelection(prefix, suffix = "") {
+      const area = input;
+      const start = area.selectionStart;
+      const end = area.selectionEnd;
+      const selectedText = area.value.substring(start, end);
+      const newText = prefix + selectedText + suffix;
+
+      area.setRangeText(newText, start, end, "end");
+      area.focus();
+      updatePreview();
+    }
+
+    // Botões de formatação
+  let titleLevel = 0; // Nível global do título (0 = nenhum, 1 a 6 = h1 a h6)
+
+document.getElementById("btnTitle").addEventListener("click", () => {
+  const lines = input.value.split("\n");
+  const startPos = input.value.substring(0, input.selectionStart).split("\n").length - 1;
+  const endPos = input.value.substring(0, input.selectionEnd).split("\n").length - 1;
+
+  // Incrementa e reinicia de 0 a 6
+  titleLevel = (titleLevel + 1) % 7;
+
+  for (let i = startPos; i <= endPos; i++) {
+    // Remove qualquer # existente no início
+    lines[i] = lines[i].replace(/^#{1,6}\s*/, "");
+    // Adiciona o novo nível se for > 0
+    if (titleLevel > 0) {
+      lines[i] = "#".repeat(titleLevel) + " " + lines[i];
+    }
+  }
+
+  input.value = lines.join("\n");
+  input.focus();
+  updatePreview();
+});
+
+
+    document
+      .getElementById("btnBold")
+      .addEventListener("click", () => insertAroundSelection("**", "**"));
+    document
+      .getElementById("btnItalic")
+      .addEventListener("click", () => insertAroundSelection("*", "*"));
+    document
+      .getElementById("btnUnderline")
+      .addEventListener("click", () => insertAroundSelection("<u>", "</u>"));
+    document
+      .getElementById("btnStrikethrough")
+      .addEventListener("click", () => insertAroundSelection("~~", "~~"));
+
+    document.getElementById("btnList").addEventListener("click", () => {
+      const lines = input.value.split("\n");
+      const startPos =
+        input.value.substring(0, input.selectionStart).split("\n").length - 1;
+      const endPos =
+        input.value.substring(0, input.selectionEnd).split("\n").length - 1;
+
+      for (let i = startPos; i <= endPos; i++) {
+        if (!lines[i].startsWith("- ")) lines[i] = "- " + lines[i];
+      }
+
+      input.value = lines.join("\n");
+      input.focus();
+      updatePreview();
+    });
+
+    document
+      .getElementById("btnCodeWithLang")
+      .addEventListener("click", () => {
+        const lang =
+          prompt(
+            "Digite a linguagem do código (ex: js, python, html, css):",
+            "html"
+          ) || "html";
+        const selectedText = input.value.substring(
+          input.selectionStart,
+          input.selectionEnd
+        );
+        const block = `\n\`\`\`${lang}\n${selectedText}\n\`\`\`\n`;
+        insertAroundSelection(block);
+      });
+
+    document
+      .getElementById("btnCodeInline")
+      .addEventListener("click", () => insertAroundSelection("`", "`"));
+    document.getElementById("btnLink").addEventListener("click", () => {
+      const url = prompt("Digite o URL do link:");
+      if (!url) return;
+      const text = prompt("Texto do link:", "clique aqui");
+      insertAroundSelection(`[${text}](${url})`);
+    });
+    document.getElementById("btnImage").addEventListener("click", () => {
+      const src = prompt("Caminho da imagem (URL ou local):");
+      if (!src) return;
+      const alt = prompt("Texto alternativo (opcional):", "Imagem");
+      insertAroundSelection(`![${alt}](${src})`);
+    });
+
+    // Alternância de tema dos blocos de código
+    document
+      .getElementById("themeToggleBtn")
+      .addEventListener("click", () => {
+        isDarkTheme = !isDarkTheme;
+        document.getElementById("hljs-style").href = isDarkTheme
+          ? "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+          : "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css";
+        updatePreview();
+      });
+
+    // Mostrar/esconder preview
+    document
+      .getElementById("toggleSplitBtn")
+      .addEventListener("click", () => {
+        const isPreviewHidden = output.classList.contains("d-none");
+        output.classList.toggle("d-none");
+
+        if (!isPreviewHidden) {
+          editorContainer.classList.add("only-one-pane");
+        } else {
+          editorContainer.classList.remove("only-one-pane");
+        }
+
+        updatePreview();
+      });
+
+    // Função reutilizável para pegar o CSS do tema
+    function getThemeUrl() {
+      return isDarkTheme
+        ? "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+        : "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css";
+    }
+
+    // Imprimir conteúdo com estilo
+    document.getElementById("btnPrint").addEventListener("click", () => {
+      const themeUrl = getThemeUrl();
+
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Impressão</title>
+            <link rel="stylesheet" href="${themeUrl}">
+            <style>
+              body {
+                font-family: sans-serif;
+                padding: 20px;
+              }
+            </style>
+          </head>
+          <body>
+            ${output.innerHTML}
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      setTimeout(() => {
+        printWindow.print();
+      }, 500);
+    });
+
+    // Salvar como .html com tema aplicado
+    document.getElementById("btnSaveHtml").addEventListener("click", () => {
+      const themeUrl = getThemeUrl();
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Documento</title>
+          <link rel="stylesheet" href="${themeUrl}">
+          <style>
+            body {
+              font-family: sans-serif;
+              padding: 20px;
+            }
+          </style>
+        </head>
+        <body>
+          ${output.innerHTML}
+        </body>
+        </html>
+      `;
+      const blob = new Blob([htmlContent], { type: "text/html" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "documento.html";
+      link.click();
+    });
+
+    // Salvar como .md
+    document.getElementById("btnSaveMd").addEventListener("click", () => {
+      const blob = new Blob([input.value], { type: "text/markdown" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "documento.md";
+      link.click();
+    });
+
+    // Abrir documentação oficial do Markdown
+    document
+      .getElementById("btnMarkdownDocs")
+      .addEventListener("click", () => {
+        window.open("https://www.markdownguide.org/basic-syntax/", "_blank");
+      });
+
+    // Atualizar preview ao digitar ou colar
+    input.addEventListener("input", updatePreview);
+    input.addEventListener("paste", () => setTimeout(updatePreview, 0));
+
+    // Inicializar
+    updatePreview();
+  </script>
+</body>
+
+</html>
